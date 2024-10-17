@@ -1,10 +1,8 @@
 import React, { useCallback } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Button } from "../components/Button";
-import { Input } from "../components/Input";
 import { useCreateTask } from "../hooks/useTasks";
 import { Task } from "../types";
-import { Form } from "../components/Form";
+import { FormProvider, Controller } from "react-hook-form";
 
 const CreateTask: React.FC = () => {
   const methods = useForm<Task>({
@@ -30,35 +28,69 @@ const CreateTask: React.FC = () => {
     },
     [mutateAsync, methods]
   );
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Create Task</h1>
-      <Form methods={methods} onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-2">Task Instruction</label>
-          <Input name="instruction" />
-        </div>
-        <div>
-          <h3 className="text-xl mb-2">Options</h3>
+    <div className="max-w-lg mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Create Task</h1>
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label className="block text-lg font-medium mb-2">Task Instruction</label>
+            <Controller
+              name="instruction"
+              control={methods.control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              )}
+            />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Options</h3>
           {fields.map((field, index) => (
-            <div key={field.id} className="mb-2 flex items-center space-x-2">
-              <Input name={`options.${index}.text`} placeholder={`Option ${index + 1}`} />
-              <label>
-                <Input type="checkbox" name={`options.${index}.isCorrect`} className="ml-2" /> Correct
+            <div key={field.id} className="flex items-center space-x-4 mb-4">
+              <Controller
+                name={`options.${index}.text`}
+                control={methods.control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="text"
+                    placeholder={`Option ${index + 1}`}
+                    className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
+              />
+              <label className="flex items-center space-x-2">
+                <Controller
+                  name={`options.${index}.isCorrect`}
+                  control={methods.control}
+                  render={({ field }) => <input {...field} type="checkbox" className="form-checkbox h-5 w-5 text-blue-600" />}
+                />
+                <span>Correct</span>
               </label>
-              <Button type="button" variant="secondary" size="small" onClick={() => remove(index)}>
+              <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700 focus:outline-none">
                 Remove
-              </Button>
+              </button>
             </div>
           ))}
-          <Button type="button" variant="primary" onClick={() => append({ text: "", isCorrect: false })}>
+          <button
+            type="button"
+            onClick={() => append({ text: "", isCorrect: false })}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
             Add Option
-          </Button>
-        </div>
-        <Button type="submit" variant="primary" className="mt-4">
-          Create Task
-        </Button>
-      </Form>
+          </button>
+          <button
+            type="submit"
+            className="w-full bg-green-500 text-white px-4 py-2 rounded-md mt-6 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Create Task
+          </button>
+        </form>
+      </FormProvider>
     </div>
   );
 };
