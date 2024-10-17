@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Layout from "./components/Layout";
 import Tasks from "./pages/Tasks";
@@ -10,7 +10,7 @@ const App: React.FC = () => {
     <ThemeProvider>
       <Layout>
         <Routes>
-          <Route path="/" element={<div>Home Page</div>} />
+          <Route path="/" element={<Navigate to="/tasks" />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/create-task" element={<CreateTask />} />
         </Routes>
