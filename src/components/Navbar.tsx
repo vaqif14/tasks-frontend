@@ -28,9 +28,6 @@ export const Navbar: React.FC = () => {
     <nav className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-200 dark:bg-gray-800">
       <div className="flex justify-between w-full md:w-auto">
         <div className="flex space-x-4">
-          <Link to="/" className="text-black dark:text-white hover:underline">
-            Home
-          </Link>
           <Link to="/tasks" className="text-black dark:text-white hover:underline">
             Tasks
           </Link>
@@ -38,9 +35,9 @@ export const Navbar: React.FC = () => {
             Create Task
           </Link>
         </div>
-          <button className="md:hidden text-black dark:text-white" onClick={toggleMenu}>
-            Mobile Menu
-          </button>
+        <button className="md:hidden text-black dark:text-white" onClick={toggleMenu}>
+          Mobile Menu
+        </button>
       </div>
       <div
         className={cn("md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0", {
