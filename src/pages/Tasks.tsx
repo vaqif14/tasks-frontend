@@ -1,14 +1,14 @@
-import React, { useCallback, useState } from "react";
 import cn from "clsx";
+import React, { useCallback, useState } from "react";
 
-import { Typography } from "../components/Typography";
-import { Card } from "../components/Card";
+import { useForm } from "react-hook-form";
 import { Button } from "../components/Button";
+import { Card } from "../components/Card";
+import { Form } from "../components/Form";
 import Loading from "../components/Loading";
+import { Typography } from "../components/Typography";
 import { useGetTaskAnswer, useSubmitTasks, useTasks } from "../hooks/useTasks";
 import { useTheme } from "../hooks/useTheme";
-import { useForm } from "react-hook-form";
-import { Form } from "../components/Form";
 interface TaskAnswer {
   [taskId: string]: string;
 }
@@ -17,19 +17,26 @@ const Tasks: React.FC = () => {
   const { data: tasks, isLoading, isError } = useTasks();
   const [checkedAnswers, setCheckedAnswers] = useState<{ [key: string]: boolean | null }>({});
 
-  const { data: answer, mutateAsync } = useGetTaskAnswer();
-  const { data: submittedTask, mutateAsync: submitTask, isSuccess } = useSubmitTasks();
+  const { mutateAsync, isPending } = useGetTaskAnswer();
+  const { data: submittedTask, mutateAsync: submitTask, isSuccess, isPending: onSubmitPending } = useSubmitTasks();
   const { theme } = useTheme();
 
   const methods = useForm();
 
   const onSubmit = useCallback(
-    (data: TaskAnswer[]) => {
-      const formattedData = Object.entries(data).map(([taskId, optionId]) => ({
+    async (data: TaskAnswer[]) => {
+      const formattedData: TaskAnswer[] = Object.entries(data).map(([taskId, optionId]) => ({
         taskId: Number(taskId),
         optionId: Number(optionId),
       }));
-      submitTask(formattedData);
+      await submitTask(formattedData).then((data) => {
+        data?.results.forEach((result) => {
+          setCheckedAnswers((prev) => ({
+            ...prev,
+            [`${result.taskId}`]: result.correct,
+          }));
+        });
+      });
     },
     [submitTask]
   );
@@ -43,20 +50,17 @@ const Tasks: React.FC = () => {
       }
 
       try {
-        await mutateAsync(taskId);
-        const answerId = answer?.id;
-
-        const isCorrect = selectedOption == answerId;
-
-        setCheckedAnswers((prev) => ({
-          ...prev,
-          [taskId]: isCorrect,
-        }));
+        await mutateAsync(taskId).then((data) => {
+          setCheckedAnswers((prev) => ({
+            ...prev,
+            [taskId]: selectedOption == data?.id,
+          }));
+        });
       } catch (error) {
         console.error("Error checking answers:", error);
       }
     },
-    [answer, mutateAsync, methods]
+    [mutateAsync, methods]
   );
 
   if (isLoading) {
@@ -94,7 +98,13 @@ const Tasks: React.FC = () => {
                 {task.options.map((option) => (
                   <Form.RadioButton
                     key={option.id}
-                    bgDanger={checkedAnswers[task.id] !== null && !checkedAnswers[task.id] && methods.getValues(`${task.id}`) === option.id}
+                    bgDanger={
+                      !isPending &&
+                      !onSubmitPending &&
+                      checkedAnswers[task.id] !== null &&
+                      !checkedAnswers[task.id] &&
+                      methods.getValues(`${task.id}`) === option.id
+                    }
                     name={`${task.id}`}
                     label={option.optionText}
                     value={option.id}
